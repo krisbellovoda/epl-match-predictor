@@ -89,3 +89,37 @@ def test_returns_five_top_scorelines():
     )
 
     assert len(prediction["top_scorelines"]) == 5
+
+
+def test_score_matrix_has_six_rows_and_columns():
+    prediction = predict_match(
+        home_expected_goals=1.75,
+        away_expected_goals=0.90,
+    )
+
+    score_matrix = prediction["score_matrix"]
+
+    assert score_matrix["max_goals"] == 5
+    assert len(score_matrix["probabilities"]) == 6
+
+    assert all(
+        len(row) == 6
+        for row in score_matrix["probabilities"]
+    )
+
+
+def test_score_matrix_contains_valid_probabilities():
+    prediction = predict_match(
+        home_expected_goals=1.75,
+        away_expected_goals=0.90,
+    )
+
+    probabilities = prediction[
+        "score_matrix"
+    ]["probabilities"]
+
+    assert all(
+        0 <= probability <= 1
+        for row in probabilities
+        for probability in row
+    )

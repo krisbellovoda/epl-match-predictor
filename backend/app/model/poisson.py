@@ -200,6 +200,24 @@ def predict_match(
         reverse=True,
     )[:5]
 
+    display_max_goals = min(5, max_goals)
+
+    display_score_matrix = [
+        [
+            float(
+                score_matrix[
+                    home_goals,
+                    away_goals,
+                ]
+            )
+            for away_goals in range(
+                display_max_goals + 1
+            )
+        ]
+        for home_goals in range(
+            display_max_goals + 1
+        )
+    ]
     return {
         "model": {
             "name": (
@@ -214,6 +232,10 @@ def predict_match(
         "expected_goals": {
             "home": float(home_expected_goals),
             "away": float(away_expected_goals),
+        },
+        "score_matrix": {
+            "max_goals": display_max_goals,
+            "probabilities": display_score_matrix,
         },
         "match_result": {
             "home_win": float(home_win),

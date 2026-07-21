@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-
 import MarketComparison from "./MarketComparison";
 import ModelPerformance from "./ModelPerformance";
 import TeamSelect from "./TeamSelect";
-
+import ScoreHeatmap from "./ScoreHeatmap";
 import "./App.css";
 
 const API_URL =
@@ -253,19 +252,21 @@ function App() {
 
           <h3>Most likely scorelines</h3>
 
-          <div className="scorelines">
-            {prediction.top_scorelines.map((result) => (
-              <article key={result.score}>
-                <strong>{result.score}</strong>
+<div className="scorelines">
+  {prediction.top_scorelines.map((result) => (
+    <article key={result.score}>
+      <strong>{result.score}</strong>
 
-                <span>
-                  {formatPercentage(result.probability)}
-                </span>
-              </article>
-            ))}
-          </div>
+      <span>
+        {formatPercentage(result.probability)}
+      </span>
+    </article>
+  ))}
+</div>
 
-          <MarketComparison prediction={prediction} />
+<ScoreHeatmap prediction={prediction} />
+
+<MarketComparison prediction={prediction} />
         </section>
       )}
 
