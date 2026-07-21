@@ -1,3 +1,4 @@
+import os
 import json
 from pathlib import Path
 
@@ -5,22 +6,21 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from backend.app.data_loader import load_match_data
 from backend.app.model.calibration_service import (
     calibrate_prediction_totals,
 )
 from backend.app.model.config import (
-    HALF_LIFE_DAYS,
     MODEL_VERSION,
-    PRIOR_MATCHES,
     get_model_configuration,
 )
 from backend.app.model.market import (
     compare_two_way_market,
 )
+from backend.app.model.model_artifact import (
+    load_production_model,
+)
 from backend.app.model.poisson import predict_match
 from backend.app.model.team_strength import (
-    build_team_strengths,
     estimate_expected_goals,
 )
 
@@ -34,13 +34,24 @@ app = FastAPI(
     version=MODEL_VERSION,
 )
 
+DEFAULT_FRONTEND_ORIGINS = (
+    "http://localhost:5173,"
+    "http://127.0.0.1:5173"
+)
 
+frontend_origins_text = os.getenv(
+    "FRONTEND_ORIGINS",
+    DEFAULT_FRONTEND_ORIGINS,
+)
+
+allowed_frontend_origins = [
+    origin.strip().rstrip("/")
+    for origin in frontend_origins_text.split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=allowed_frontend_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -99,17 +110,13 @@ class MarketComparisonRequest(BaseModel):
     )
 
 
-# Load the historical data once when the API starts.
-matches = load_match_data()
-
-
-# Build the approved production model using settings from
-# config.py. Experimental settings cannot accidentally enter
-# production without changing the central configuration.
-strength_model = build_team_strengths(
-    matches=matches,
-    prior_matches=PRIOR_MATCHES,
-    half_life_days=HALF_LIFE_DAYS,
+# Load the approved, versioned production artifact.
+#
+# The deployed API does not require access to the raw historical
+# CSV files. Those files remain local and are used only when
+# training and exporting a future model version.
+strength_model, model_metadata = (
+    load_production_model()
 )
 
 
@@ -134,12 +141,25 @@ def home():
 def health_check():
     return {
         "status": "healthy",
-        "matches_loaded": len(matches),
+        "model_version": MODEL_VERSION,
+        "training_matches": model_metadata[
+            "training_matches"
+        ],
         "teams_loaded": len(
             strength_model["teams"]
         ),
+        "artifact": {
+            "generated_at": model_metadata[
+                "generated_at"
+            ],
+            "last_training_match": model_metadata[
+                "last_training_match"
+            ],
+            "schema_version": model_metadata[
+                "schema_version"
+            ],
+        },
         "model": {
-            "version": MODEL_VERSION,
             "prior_matches": (
                 strength_model["prior_matches"]
             ),
@@ -155,7 +175,22 @@ def health_check():
     summary="Production Model Information",
 )
 def model_info():
-    return get_model_configuration()
+    configuration = get_model_configuration()
+
+    return {
+        **configuration,
+        "artifact": {
+            "generated_at": model_metadata[
+                "generated_at"
+            ],
+            "training_matches": model_metadata[
+                "training_matches"
+            ],
+            "last_training_match": model_metadata[
+                "last_training_match"
+            ],
+        },
+    }
 
 
 @app.get(
@@ -201,6 +236,7 @@ def get_teams():
     return {
         "teams": teams,
         "count": len(teams),
+        "model_version": MODEL_VERSION,
     }
 
 
