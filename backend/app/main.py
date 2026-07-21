@@ -1,6 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from backend.app.model.calibration_service import (
+    calibrate_prediction_totals,
+)
 
 from backend.app.data_loader import load_match_data
 from backend.app.model.market import compare_two_way_market
@@ -118,13 +121,17 @@ def get_teams():
 def create_manual_prediction(
     request: PredictionRequest,
 ):
-    return predict_match(
+    prediction = predict_match(
         home_expected_goals=(
             request.home_expected_goals
         ),
         away_expected_goals=(
             request.away_expected_goals
         ),
+    )
+
+    return calibrate_prediction_totals(
+        prediction
     )
 
 
@@ -148,6 +155,9 @@ def create_team_prediction(
         home_expected_goals=home_xg,
         away_expected_goals=away_xg,
     )
+    prediction = calibrate_prediction_totals(
+    prediction
+)
 
     return {
         "home_team": request.home_team,

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import MarketComparison from "./MarketComparison";
+import ModelPerformance from "./ModelPerformance";
 import "./App.css";
 
 
@@ -245,6 +246,8 @@ function App() {
           <MarketComparison prediction={prediction} />
         </section>
       )}
+
+      <ModelPerformance />
     </main>
   );
 }

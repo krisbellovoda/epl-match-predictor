@@ -6,7 +6,7 @@ import pandas as pd
 BACKEND_DIRECTORY = Path(__file__).resolve().parents[1]
 DATA_DIRECTORY = BACKEND_DIRECTORY / "data" / "raw"
 
-REQUIRED_COLUMNS = [
+MATCH_COLUMNS = [
     "Date",
     "HomeTeam",
     "AwayTeam",
@@ -15,10 +15,17 @@ REQUIRED_COLUMNS = [
     "FTR",
 ]
 
+MARKET_COLUMNS = [
+    "Avg>2.5",
+    "Avg<2.5",
+]
+
+REQUIRED_COLUMNS = MATCH_COLUMNS + MARKET_COLUMNS
+
 
 def load_match_data() -> pd.DataFrame:
     """
-    Load, combine, clean, and sort all EPL season CSV files.
+    Load, combine, clean, and sort all EPL CSV files.
     """
 
     data_files = sorted(
@@ -68,18 +75,21 @@ def load_match_data() -> pd.DataFrame:
         errors="coerce",
     )
 
-    matches["FTHG"] = pd.to_numeric(
-        matches["FTHG"],
-        errors="coerce",
-    )
+    numeric_columns = [
+        "FTHG",
+        "FTAG",
+        "Avg>2.5",
+        "Avg<2.5",
+    ]
 
-    matches["FTAG"] = pd.to_numeric(
-        matches["FTAG"],
-        errors="coerce",
-    )
+    for column in numeric_columns:
+        matches[column] = pd.to_numeric(
+            matches[column],
+            errors="coerce",
+        )
 
     matches = matches.dropna(
-        subset=REQUIRED_COLUMNS
+        subset=MATCH_COLUMNS
     )
 
     matches["FTHG"] = matches["FTHG"].astype(int)

@@ -93,6 +93,7 @@ def run_backtest(
         predictions.append(
             {
                 "date": test_match["Date"],
+                "season": test_match["Season"],
                 "home_team": test_match["HomeTeam"],
                 "away_team": test_match["AwayTeam"],
                 "actual_result": actual_result,
@@ -110,6 +111,9 @@ def run_backtest(
                     )
                     ** 2
                 ),
+                "over_2_5_probability":prediction[
+                    "total_goals"
+                ]["over_2_5"],
                 "predicted_over_2_5": predicted_over,
                 "actual_over_2_5": actual_over,
                 "correct_over_2_5": (
@@ -117,7 +121,7 @@ def run_backtest(
                 ),
             }
         )
-
+        
     results = pd.DataFrame(predictions)
 
     if results.empty:

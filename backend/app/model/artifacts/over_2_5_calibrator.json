@@ -1,0 +1,7 @@
+{
+  "intercept": 0.035066006935674916,
+  "slope": 0.5785257778316306,
+  "fit_season": "2024_25",
+  "test_season": "2025_26",
+  "description": "Logistic calibration for Over 2.5 probabilities"
+}
