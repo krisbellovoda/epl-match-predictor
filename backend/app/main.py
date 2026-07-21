@@ -26,7 +26,7 @@ from backend.app.model.team_strength import (
 
 
 app = FastAPI(
-    title="English Match Prediction API",
+    title="EPL Match Prediction API",
     description=(
         "API for an educational English football "
         "probability model"
@@ -127,7 +127,7 @@ strength_model, model_metadata = (
 def home():
     return {
         "message": (
-            "English Match Prediction API is running"
+            "EPL Match Prediction API is running"
         ),
         "model_version": MODEL_VERSION,
         "documentation": "/docs",

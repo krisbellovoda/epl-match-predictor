@@ -110,10 +110,10 @@ function App() {
 
     <div className="brand-copy">
       <p className="eyebrow">
-        Data-driven English football analysis
+        Data-driven EPL analytics
       </p>
 
-      <h1>English Match Predictor</h1>
+      <h1>EPL Match Predictor</h1>
     </div>
   </div>
 

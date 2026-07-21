@@ -4,7 +4,7 @@ import { useState } from "react";
 
 
 const ACCESS_CODE = "0408";
-const SESSION_KEY = "english-match-predictor-access";
+const SESSION_KEY = "epl-match-predictor-access";
 
 
 function PasswordGate({ children }) {
@@ -45,7 +45,7 @@ function PasswordGate({ children }) {
           </div>
 
           <span className="access-eyebrow">
-            ENGLISH FOOTBALL ANALYTICS
+            EPL ANALYTICS
           </span>
 
           <h1>Match intelligence, explained.</h1>
