@@ -3,6 +3,7 @@ import MarketComparison from "./MarketComparison";
 import ModelPerformance from "./ModelPerformance";
 import TeamSelect from "./TeamSelect";
 import ScoreHeatmap from "./ScoreHeatmap";
+import PredictionExplanation from "./PredictionExplanation";
 import "./App.css";
 
 const API_URL =
@@ -265,6 +266,12 @@ function App() {
 </div>
 
 <ScoreHeatmap prediction={prediction} />
+
+<PredictionExplanation
+  prediction={prediction}
+  homeTeam={homeTeam}
+  awayTeam={awayTeam}
+/>
 
 <MarketComparison prediction={prediction} />
         </section>
