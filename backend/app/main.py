@@ -12,7 +12,8 @@ from backend.app.model.team_strength import (
     build_team_strengths,
     estimate_expected_goals,
 )
-
+import json
+from pathlib import Path
 
 app = FastAPI(
     title="EPL Prediction API",
@@ -20,6 +21,12 @@ app = FastAPI(
     version="0.4.0",
 )
 
+BACKTEST_SUMMARY_PATH = (
+    Path(__file__).resolve().parent
+    / "model"
+    / "artifacts"
+    / "backtest_summary.json"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -85,6 +92,13 @@ def home():
         "message": "EPL Prediction API is running"
     }
 
+@app.get("/model/performance")
+def get_model_performance():
+    with BACKTEST_SUMMARY_PATH.open(
+        "r",
+        encoding="utf-8",
+    ) as summary_file:
+        return json.load(summary_file)
 
 @app.get("/health")
 def health_check():

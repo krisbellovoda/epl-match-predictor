@@ -1,0 +1,14 @@
+{
+  "test_season": "2025_26",
+  "minimum_edge": 0.05,
+  "bets": 145,
+  "wins": 72,
+  "losses": 73,
+  "hit_rate": 0.496551724137931,
+  "profit_units": 6.33,
+  "roi": 0.0436551724137931,
+  "average_odds": 2.1328965517241376,
+  "average_edge": 0.08656851627209455,
+  "maximum_drawdown": 7.32,
+  "raw_model_roi": -0.04188679245283018
+}
