@@ -2,25 +2,81 @@ import numpy as np
 from scipy.stats import poisson
 
 
-def predict_match(
+def _validate_inputs(
+    home_expected_goals: float,
+    away_expected_goals: float,
+    max_goals: int,
+) -> None:
+    if home_expected_goals <= 0:
+        raise ValueError(
+            "Home expected goals must be greater than zero."
+        )
+
+    if away_expected_goals <= 0:
+        raise ValueError(
+            "Away expected goals must be greater than zero."
+        )
+
+    if max_goals < 1:
+        raise ValueError(
+            "max_goals must be at least 1."
+        )
+
+
+def _dixon_coles_factors(
+    home_expected_goals: float,
+    away_expected_goals: float,
+    rho: float,
+) -> dict[tuple[int, int], float]:
+    """
+    Return Dixon-Coles correction factors for low scores.
+
+    The correction only affects:
+    - 0-0
+    - 0-1
+    - 1-0
+    - 1-1
+
+    rho=0 produces the original independent Poisson model.
+    """
+
+    return {
+        (0, 0): (
+            1
+            - home_expected_goals
+            * away_expected_goals
+            * rho
+        ),
+        (0, 1): (
+            1
+            + home_expected_goals * rho
+        ),
+        (1, 0): (
+            1
+            + away_expected_goals * rho
+        ),
+        (1, 1): 1 - rho,
+    }
+
+
+def build_score_matrix(
     home_expected_goals: float,
     away_expected_goals: float,
     max_goals: int = 10,
-) -> dict:
+    dixon_coles_rho: float = 0.0,
+) -> np.ndarray:
     """
-    Calculate match probabilities using independent Poisson distributions.
+    Build a normalized score-probability matrix.
 
-    Args:
-        home_expected_goals: Expected goals for the home team.
-        away_expected_goals: Expected goals for the away team.
-        max_goals: Highest number of goals included for each team.
-
-    Returns:
-        A dictionary containing match and scoreline probabilities.
+    Rows represent home goals.
+    Columns represent away goals.
     """
 
-    if home_expected_goals <= 0 or away_expected_goals <= 0:
-        raise ValueError("Expected goals must be greater than zero.")
+    _validate_inputs(
+        home_expected_goals=home_expected_goals,
+        away_expected_goals=away_expected_goals,
+        max_goals=max_goals,
+    )
 
     goal_values = np.arange(max_goals + 1)
 
@@ -39,13 +95,71 @@ def predict_match(
         away_goal_probabilities,
     )
 
-    # Normalize because extremely unlikely scores above max_goals
-    # are excluded from the matrix.
-    score_matrix = score_matrix / score_matrix.sum()
+    correction_factors = _dixon_coles_factors(
+        home_expected_goals=home_expected_goals,
+        away_expected_goals=away_expected_goals,
+        rho=dixon_coles_rho,
+    )
 
-    home_win = np.tril(score_matrix, k=-1).sum()
+    for (
+        home_goals,
+        away_goals,
+    ), factor in correction_factors.items():
+        if factor <= 0:
+            raise ValueError(
+                "dixon_coles_rho creates an invalid "
+                "non-positive score correction."
+            )
+
+        score_matrix[
+            home_goals,
+            away_goals,
+        ] *= factor
+
+    matrix_total = score_matrix.sum()
+
+    if matrix_total <= 0:
+        raise ValueError(
+            "Score probabilities must have a positive total."
+        )
+
+    return score_matrix / matrix_total
+
+
+def predict_match(
+    home_expected_goals: float,
+    away_expected_goals: float,
+    max_goals: int = 10,
+    dixon_coles_rho: float = 0.0,
+) -> dict:
+    """
+    Calculate match probabilities using a Poisson score model.
+
+    When dixon_coles_rho is nonzero, low-scoring results receive
+    the Dixon-Coles correction. A value of zero reproduces the
+    independent Poisson model.
+    """
+
+    score_matrix = build_score_matrix(
+        home_expected_goals=home_expected_goals,
+        away_expected_goals=away_expected_goals,
+        max_goals=max_goals,
+        dixon_coles_rho=dixon_coles_rho,
+    )
+
+    goal_values = np.arange(max_goals + 1)
+
+    home_win = np.tril(
+        score_matrix,
+        k=-1,
+    ).sum()
+
     draw = np.trace(score_matrix)
-    away_win = np.triu(score_matrix, k=1).sum()
+
+    away_win = np.triu(
+        score_matrix,
+        k=1,
+    ).sum()
 
     under_2_5 = sum(
         score_matrix[home_goals, away_goals]
@@ -57,7 +171,10 @@ def predict_match(
     over_2_5 = 1 - under_2_5
 
     both_teams_to_score = score_matrix[1:, 1:].sum()
-    both_teams_not_to_score = 1 - both_teams_to_score
+
+    both_teams_not_to_score = (
+        1 - both_teams_to_score
+    )
 
     scorelines = []
 
@@ -65,9 +182,14 @@ def predict_match(
         for away_goals in goal_values:
             scorelines.append(
                 {
-                    "score": f"{home_goals}-{away_goals}",
+                    "score": (
+                        f"{home_goals}-{away_goals}"
+                    ),
                     "probability": float(
-                        score_matrix[home_goals, away_goals]
+                        score_matrix[
+                            home_goals,
+                            away_goals,
+                        ]
                     ),
                 }
             )
@@ -79,9 +201,19 @@ def predict_match(
     )[:5]
 
     return {
+        "model": {
+            "name": (
+                "dixon_coles"
+                if dixon_coles_rho != 0
+                else "independent_poisson"
+            ),
+            "dixon_coles_rho": float(
+                dixon_coles_rho
+            ),
+        },
         "expected_goals": {
-            "home": home_expected_goals,
-            "away": away_expected_goals,
+            "home": float(home_expected_goals),
+            "away": float(away_expected_goals),
         },
         "match_result": {
             "home_win": float(home_win),

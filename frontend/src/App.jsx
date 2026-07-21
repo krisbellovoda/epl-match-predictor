@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
+
 import MarketComparison from "./MarketComparison";
 import ModelPerformance from "./ModelPerformance";
+import TeamSelect from "./TeamSelect";
+
 import "./App.css";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "http://127.0.0.1:8000";
 
-const API_URL = "http://127.0.0.1:8000";
 
 function formatPercentage(probability) {
   return `${(probability * 100).toFixed(1)}%`;
@@ -45,8 +50,14 @@ function App() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+
     setError("");
     setPrediction(null);
+
+    if (!homeTeam || !awayTeam) {
+      setError("Choose a home and away team.");
+      return;
+    }
 
     if (homeTeam === awayTeam) {
       setError("Choose two different teams.");
@@ -56,16 +67,19 @@ function App() {
     setPredicting(true);
 
     try {
-      const response = await fetch(`${API_URL}/predict/teams`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${API_URL}/predict/teams`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            home_team: homeTeam,
+            away_team: awayTeam,
+          }),
         },
-        body: JSON.stringify({
-          home_team: homeTeam,
-          away_team: awayTeam,
-        }),
-      });
+      );
 
       const data = await response.json();
 
@@ -85,51 +99,52 @@ function App() {
 
   return (
     <main className="app">
-      <header>
-        <p className="eyebrow">Data-driven EPL analysis</p>
-        <h1>EPL Match Predictor</h1>
-        <p>
-          Select two teams to generate Poisson-based match
-          probabilities from historical performance.
-        </p>
-      </header>
+      <header className="app-header">
+  <div className="brand-row">
+    <div
+      className="app-mark"
+      aria-hidden="true"
+    >
+      xG
+    </div>
+
+    <div className="brand-copy">
+      <p className="eyebrow">
+        Data-driven English football analysis
+      </p>
+
+      <h1>English Match Predictor</h1>
+    </div>
+  </div>
+
+  <p className="header-description">
+    Select two teams to generate Poisson-based match
+    probabilities from historical performance.
+  </p>
+
+  <span className="unofficial-label">
+    Unofficial educational project
+  </span>
+</header>
 
       <section className="prediction-panel">
         <form onSubmit={handleSubmit}>
           <div className="team-fields">
-            <label>
-              Home team
-              <select
-                value={homeTeam}
-                onChange={(event) =>
-                  setHomeTeam(event.target.value)
-                }
-                disabled={loadingTeams}
-              >
-                {teams.map((team) => (
-                  <option key={team} value={team}>
-                    {team}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <TeamSelect
+              label="Home team"
+              teams={teams}
+              value={homeTeam}
+              onChange={setHomeTeam}
+              disabled={loadingTeams}
+            />
 
-            <label>
-              Away team
-              <select
-                value={awayTeam}
-                onChange={(event) =>
-                  setAwayTeam(event.target.value)
-                }
-                disabled={loadingTeams}
-              >
-                {teams.map((team) => (
-                  <option key={team} value={team}>
-                    {team}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <TeamSelect
+              label="Away team"
+              teams={teams}
+              value={awayTeam}
+              onChange={setAwayTeam}
+              disabled={loadingTeams}
+            />
           </div>
 
           <button
@@ -173,6 +188,7 @@ function App() {
           <div className="probability-grid">
             <article>
               <span>Home win</span>
+
               <strong>
                 {formatPercentage(
                   prediction.match_result.home_win,
@@ -182,6 +198,7 @@ function App() {
 
             <article>
               <span>Draw</span>
+
               <strong>
                 {formatPercentage(
                   prediction.match_result.draw,
@@ -191,6 +208,7 @@ function App() {
 
             <article>
               <span>Away win</span>
+
               <strong>
                 {formatPercentage(
                   prediction.match_result.away_win,
@@ -204,6 +222,7 @@ function App() {
           <div className="probability-grid">
             <article>
               <span>Over 2.5</span>
+
               <strong>
                 {formatPercentage(
                   prediction.total_goals.over_2_5,
@@ -213,6 +232,7 @@ function App() {
 
             <article>
               <span>Under 2.5</span>
+
               <strong>
                 {formatPercentage(
                   prediction.total_goals.under_2_5,
@@ -222,6 +242,7 @@ function App() {
 
             <article>
               <span>Both teams score</span>
+
               <strong>
                 {formatPercentage(
                   prediction.both_teams_to_score.yes,
@@ -236,6 +257,7 @@ function App() {
             {prediction.top_scorelines.map((result) => (
               <article key={result.score}>
                 <strong>{result.score}</strong>
+
                 <span>
                   {formatPercentage(result.probability)}
                 </span>
