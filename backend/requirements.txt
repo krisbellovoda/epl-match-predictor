@@ -1,9 +1,6 @@
-fastapi
-uvicorn[standard]
-pandas
-numpy
-scipy
-matplotlib
-seaborn
-jupyter
-pytest
+fastapi==0.139.2
+uvicorn[standard]==0.51.0
+pydantic==2.13.4
+pandas==3.0.3
+numpy==2.5.1
+scipy==1.18.0
