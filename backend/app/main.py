@@ -1,5 +1,5 @@
-import os
 import json
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -10,6 +10,8 @@ from backend.app.model.calibration_service import (
     calibrate_prediction_totals,
 )
 from backend.app.model.config import (
+    CURRENT_EPL_TEAMS,
+    CURRENT_SEASON,
     MODEL_VERSION,
     get_model_configuration,
 )
@@ -28,11 +30,16 @@ from backend.app.model.team_strength import (
 app = FastAPI(
     title="EPL Match Prediction API",
     description=(
-        "API for an educational English football "
+        "API for an educational EPL football "
         "probability model"
     ),
     version=MODEL_VERSION,
 )
+
+
+# ---------------------------------------------------------
+# CORS
+# ---------------------------------------------------------
 
 DEFAULT_FRONTEND_ORIGINS = (
     "http://localhost:5173,"
@@ -49,6 +56,7 @@ allowed_frontend_origins = [
     for origin in frontend_origins_text.split(",")
     if origin.strip()
 ]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_frontend_origins,
@@ -58,6 +66,10 @@ app.add_middleware(
 )
 
 
+# ---------------------------------------------------------
+# Artifact paths
+# ---------------------------------------------------------
+
 BACKTEST_SUMMARY_PATH = (
     Path(__file__).resolve().parent
     / "model"
@@ -65,6 +77,10 @@ BACKTEST_SUMMARY_PATH = (
     / "backtest_summary.json"
 )
 
+
+# ---------------------------------------------------------
+# Request models
+# ---------------------------------------------------------
 
 class PredictionRequest(BaseModel):
     home_expected_goals: float = Field(
@@ -110,15 +126,58 @@ class MarketComparisonRequest(BaseModel):
     )
 
 
-# Load the approved, versioned production artifact.
-#
-# The deployed API does not require access to the raw historical
-# CSV files. Those files remain local and are used only when
-# training and exporting a future model version.
+# ---------------------------------------------------------
+# Load production model
+# ---------------------------------------------------------
+
+# The deployed API loads the versioned production artifact.
+# Raw CSV files are only needed when retraining the model.
+
 strength_model, model_metadata = (
     load_production_model()
 )
 
+
+def validate_production_roster() -> None:
+    """
+    Confirm that the production artifact contains every club
+    in the configured 2026-27 EPL roster.
+    """
+
+    loaded_teams = set(
+        strength_model["teams"].index.tolist()
+    )
+
+    expected_teams = set(CURRENT_EPL_TEAMS)
+
+    missing_teams = sorted(
+        expected_teams - loaded_teams
+    )
+
+    unexpected_teams = sorted(
+        loaded_teams - expected_teams
+    )
+
+    if missing_teams:
+        raise RuntimeError(
+            "Production model is missing current EPL teams: "
+            + ", ".join(missing_teams)
+        )
+
+    if unexpected_teams:
+        raise RuntimeError(
+            "Production model contains teams outside the "
+            "current EPL roster: "
+            + ", ".join(unexpected_teams)
+        )
+
+
+validate_production_roster()
+
+
+# ---------------------------------------------------------
+# General endpoints
+# ---------------------------------------------------------
 
 @app.get(
     "/",
@@ -130,6 +189,7 @@ def home():
             "EPL Match Prediction API is running"
         ),
         "model_version": MODEL_VERSION,
+        "season": CURRENT_SEASON,
         "documentation": "/docs",
     }
 
@@ -142,11 +202,19 @@ def health_check():
     return {
         "status": "healthy",
         "model_version": MODEL_VERSION,
+        "season": CURRENT_SEASON,
         "training_matches": model_metadata[
             "training_matches"
         ],
         "teams_loaded": len(
             strength_model["teams"]
+        ),
+        "selectable_teams": len(
+            CURRENT_EPL_TEAMS
+        ),
+        "prior_based_teams": model_metadata.get(
+            "prior_based_teams",
+            [],
         ),
         "artifact": {
             "generated_at": model_metadata[
@@ -189,6 +257,19 @@ def model_info():
             "last_training_match": model_metadata[
                 "last_training_match"
             ],
+            "schema_version": model_metadata[
+                "schema_version"
+            ],
+            "season": model_metadata.get(
+                "season",
+                CURRENT_SEASON,
+            ),
+            "prior_based_teams": (
+                model_metadata.get(
+                    "prior_based_teams",
+                    [],
+                )
+            ),
         },
     }
 
@@ -226,19 +307,24 @@ def get_model_performance():
 
 @app.get(
     "/teams",
-    summary="Available Teams",
+    summary="Available 2026-27 EPL Teams",
 )
 def get_teams():
-    teams = sorted(
-        strength_model["teams"].index.tolist()
-    )
-
     return {
-        "teams": teams,
-        "count": len(teams),
+        "teams": list(CURRENT_EPL_TEAMS),
+        "count": len(CURRENT_EPL_TEAMS),
+        "season": CURRENT_SEASON,
         "model_version": MODEL_VERSION,
+        "prior_based_teams": model_metadata.get(
+            "prior_based_teams",
+            [],
+        ),
     }
 
+
+# ---------------------------------------------------------
+# Prediction endpoints
+# ---------------------------------------------------------
 
 @app.post(
     "/predict",
@@ -264,13 +350,14 @@ def create_manual_prediction(
 
     return {
         "model_version": MODEL_VERSION,
+        "season": CURRENT_SEASON,
         **calibrated_prediction,
     }
 
 
 @app.post(
     "/predict/teams",
-    summary="Team Match Prediction",
+    summary="2026-27 EPL Team Match Prediction",
 )
 def create_team_prediction(
     request: TeamPredictionRequest,
@@ -280,6 +367,24 @@ def create_team_prediction(
             status_code=400,
             detail=(
                 "Home and away teams must be different."
+            ),
+        )
+
+    if request.home_team not in CURRENT_EPL_TEAMS:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"{request.home_team} is not a selectable "
+                f"{CURRENT_SEASON} EPL team."
+            ),
+        )
+
+    if request.away_team not in CURRENT_EPL_TEAMS:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"{request.away_team} is not a selectable "
+                f"{CURRENT_SEASON} EPL team."
             ),
         )
 
@@ -307,13 +412,33 @@ def create_team_prediction(
         )
     )
 
+    prior_based_teams = set(
+        model_metadata.get(
+            "prior_based_teams",
+            [],
+        )
+    )
+
+    prediction_uses_prior = (
+        request.home_team in prior_based_teams
+        or request.away_team in prior_based_teams
+    )
+
     return {
         "model_version": MODEL_VERSION,
+        "season": CURRENT_SEASON,
         "home_team": request.home_team,
         "away_team": request.away_team,
+        "prediction_uses_promoted_team_prior": (
+            prediction_uses_prior
+        ),
         **calibrated_prediction,
     }
 
+
+# ---------------------------------------------------------
+# Sportsbook comparison
+# ---------------------------------------------------------
 
 @app.post(
     "/market/compare",
@@ -343,5 +468,6 @@ def compare_market(
 
     return {
         "model_version": MODEL_VERSION,
+        "season": CURRENT_SEASON,
         **comparison,
     }

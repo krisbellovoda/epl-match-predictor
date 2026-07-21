@@ -1,9 +1,36 @@
 {
-  "schema_version": 1,
-  "model_version": "1.0.0",
-  "generated_at": "2026-07-21T20:26:27.405179+00:00",
+  "schema_version": 2,
+  "model_version": "1.1.0",
+  "season": "2026-27",
+  "generated_at": "2026-07-21T23:57:47.811733+00:00",
   "training_matches": 1140,
   "last_training_match": "2026-05-24 00:00:00",
+  "selectable_teams": [
+    "Arsenal",
+    "Aston Villa",
+    "Bournemouth",
+    "Brentford",
+    "Brighton",
+    "Chelsea",
+    "Coventry City",
+    "Crystal Palace",
+    "Everton",
+    "Fulham",
+    "Hull City",
+    "Ipswich",
+    "Leeds",
+    "Liverpool",
+    "Man City",
+    "Man United",
+    "Newcastle",
+    "Nott'm Forest",
+    "Sunderland",
+    "Tottenham"
+  ],
+  "prior_based_teams": [
+    "Coventry City",
+    "Hull City"
+  ],
   "model": {
     "league_home_goals": 1.5621358568711206,
     "league_away_goals": 1.3168084362507106,
@@ -90,22 +117,6 @@
         "away_attack": 1.0469613150436563,
         "away_defense": 0.9818069043084761
       },
-      "Burnley": {
-        "home_goals_scored": 17.67434624878968,
-        "home_goals_conceded": 31.211272013958336,
-        "home_weight": 18.451962956047225,
-        "away_goals_scored": 19.3972978502992,
-        "away_goals_conceded": 41.827612856898185,
-        "away_weight": 18.386075100055812,
-        "smoothed_home_scored": 1.0866905077800244,
-        "smoothed_home_conceded": 1.6116055728915495,
-        "smoothed_away_scored": 1.1109747967708676,
-        "smoothed_away_conceded": 2.1225576300802746,
-        "home_attack": 0.6956440459388793,
-        "home_defense": 1.2238724544324773,
-        "away_attack": 0.8436874842130387,
-        "away_defense": 1.3587535429419377
-      },
       "Chelsea": {
         "home_goals_scored": 42.629755903142,
         "home_goals_conceded": 31.820766124036496,
@@ -121,6 +132,22 @@
         "home_defense": 0.9451051871089031,
         "away_attack": 1.1609042776655694,
         "away_defense": 0.967508074168078
+      },
+      "Coventry City": {
+        "home_goals_scored": 0.0,
+        "home_goals_conceded": 0.0,
+        "home_weight": 0.0,
+        "away_goals_scored": 0.0,
+        "away_goals_conceded": 0.0,
+        "away_weight": 0.0,
+        "smoothed_home_scored": 1.3278154783404523,
+        "smoothed_home_conceded": 1.514329701688317,
+        "smoothed_away_scored": 1.119287170813104,
+        "smoothed_away_conceded": 1.7964562354017886,
+        "home_attack": 0.85,
+        "home_defense": 1.15,
+        "away_attack": 0.85,
+        "away_defense": 1.15
       },
       "Crystal Palace": {
         "home_goals_scored": 32.50865184590101,
@@ -170,6 +197,22 @@
         "away_attack": 0.8613448559069724,
         "away_defense": 0.9946574317530633
       },
+      "Hull City": {
+        "home_goals_scored": 0.0,
+        "home_goals_conceded": 0.0,
+        "home_weight": 0.0,
+        "away_goals_scored": 0.0,
+        "away_goals_conceded": 0.0,
+        "away_weight": 0.0,
+        "smoothed_home_scored": 1.3278154783404523,
+        "smoothed_home_conceded": 1.514329701688317,
+        "smoothed_away_scored": 1.119287170813104,
+        "smoothed_away_conceded": 1.7964562354017886,
+        "home_attack": 0.85,
+        "home_defense": 1.15,
+        "away_attack": 0.85,
+        "away_defense": 1.15
+      },
       "Ipswich": {
         "home_goals_scored": 5.414220325690571,
         "home_goals_conceded": 17.633686934911015,
@@ -202,22 +245,6 @@
         "away_attack": 0.8589356409476714,
         "away_defense": 1.1077534603685046
       },
-      "Leicester": {
-        "home_goals_scored": 5.681694395991139,
-        "home_goals_conceded": 13.129356694545887,
-        "home_weight": 7.358838238275445,
-        "away_goals_scored": 6.704099484632013,
-        "away_goals_conceded": 17.85820018394875,
-        "away_weight": 7.467966168804899,
-        "smoothed_home_scored": 1.0917186081909158,
-        "smoothed_home_conceded": 1.5950851120250809,
-        "smoothed_away_scored": 1.0657826213174015,
-        "smoothed_away_conceded": 2.0587864228031356,
-        "home_attack": 0.6988627803330584,
-        "home_defense": 1.2113266198132013,
-        "away_attack": 0.8093680082669856,
-        "away_defense": 1.3179304563988314
-      },
       "Liverpool": {
         "home_goals_scored": 52.72359216288498,
         "home_goals_conceded": 25.380211007828,
@@ -233,22 +260,6 @@
         "home_defense": 0.7829441837265328,
         "away_attack": 1.3104340308207791,
         "away_defense": 1.016542554920844
-      },
-      "Luton": {
-        "home_goals_scored": 5.5740595163975675,
-        "home_goals_conceded": 7.468039885441405,
-        "home_weight": 3.7152231508774074,
-        "away_goals_scored": 4.7300632650250165,
-        "away_goals_conceded": 9.465002019540073,
-        "away_weight": 3.6887951489176753,
-        "smoothed_home_scored": 1.5357884209087242,
-        "smoothed_home_conceded": 1.6123605584649043,
-        "smoothed_away_scored": 1.3021489461272335,
-        "smoothed_away_conceded": 1.9882712168726442,
-        "home_attack": 0.9831337102682164,
-        "home_defense": 1.2244457994632127,
-        "away_attack": 0.9888674087134371,
-        "away_defense": 1.2727902045952977
       },
       "Man City": {
         "home_goals_scored": 61.826747169976926,
@@ -314,38 +325,6 @@
         "away_attack": 1.1655932961500872,
         "away_defense": 1.0057972221244933
       },
-      "Sheffield United": {
-        "home_goals_scored": 3.6967639099585154,
-        "home_goals_conceded": 11.237886446707556,
-        "home_weight": 3.667290209039308,
-        "away_goals_scored": 3.210669354240273,
-        "away_goals_conceded": 9.226491061142761,
-        "away_weight": 3.7141786587886276,
-        "smoothed_home_scored": 1.3276863837226485,
-        "smoothed_home_conceded": 2.0562284402770112,
-        "smoothed_away_scored": 1.123997099326789,
-        "smoothed_away_conceded": 1.955109140241879,
-        "home_attack": 0.8499173601852642,
-        "home_defense": 1.5615243521158004,
-        "away_attack": 0.8535767757739274,
-        "away_defense": 1.2515615281745496
-      },
-      "Southampton": {
-        "home_goals_scored": 5.066550238203174,
-        "home_goals_conceded": 18.331277230805814,
-        "home_weight": 7.486654645982554,
-        "away_goals_scored": 5.0258962314263895,
-        "away_goals_conceded": 15.166895133424859,
-        "away_weight": 7.336497800478865,
-        "smoothed_home_scored": 1.031279384883275,
-        "smoothed_home_conceded": 1.9953558513829484,
-        "smoothed_away_scored": 0.9411048905816105,
-        "smoothed_away_conceded": 1.862568679490912,
-        "home_attack": 0.6601726606217693,
-        "home_defense": 1.5152969835644698,
-        "away_attack": 0.7146862555507133,
-        "away_defense": 1.1923218273867313
-      },
       "Sunderland": {
         "home_goals_scored": 18.37768589281963,
         "home_goals_conceded": 16.206110968147065,
@@ -377,38 +356,6 @@
         "home_defense": 1.2467919397790324,
         "away_attack": 1.0702845859455885,
         "away_defense": 0.9797047535325348
-      },
-      "West Ham": {
-        "home_goals_scored": 36.497631598838225,
-        "home_goals_conceded": 39.664160876820155,
-        "home_weight": 25.82734596706774,
-        "away_goals_scored": 29.192637520788765,
-        "away_goals_conceded": 47.64359552273543,
-        "away_weight": 25.847008620992575,
-        "smoothed_home_scored": 1.4373054018509261,
-        "smoothed_home_conceded": 1.5002330433336613,
-        "smoothed_away_scored": 1.159810344711834,
-        "smoothed_away_conceded": 1.7977196910222364,
-        "home_attack": 0.9200898856068617,
-        "home_defense": 1.13929482985787,
-        "away_attack": 0.8807737805918906,
-        "away_defense": 1.1508088000892434
-      },
-      "Wolves": {
-        "home_goals_scored": 30.30645989167681,
-        "home_goals_conceded": 42.32381582747002,
-        "home_weight": 25.826658730621222,
-        "away_goals_scored": 21.36115475687542,
-        "away_goals_conceded": 48.02569731616707,
-        "away_weight": 25.803145785262576,
-        "smoothed_home_scored": 1.2364992102815637,
-        "smoothed_home_conceded": 1.5865442452295893,
-        "smoothed_away_scored": 0.9072189292919246,
-        "smoothed_away_conceded": 1.8126842300385102,
-        "home_attack": 0.7915439651697193,
-        "home_defense": 1.2048405839097487,
-        "away_attack": 0.6889528532145558,
-        "away_defense": 1.1603883375862234
       }
     }
   }

@@ -229,3 +229,136 @@ def estimate_expected_goals(
         float(home_expected_goals),
         float(away_expected_goals),
     )
+def _create_prior_team_row(
+    columns: list[str],
+    league_home_goals: float,
+    league_away_goals: float,
+    attack_strength: float,
+    defense_strength: float,
+) -> dict:
+    """
+    Create a complete strength-table row for a team that has
+    no EPL observations in the training data.
+    """
+
+    if attack_strength <= 0:
+        raise ValueError(
+            "attack_strength must be greater than zero."
+        )
+
+    if defense_strength <= 0:
+        raise ValueError(
+            "defense_strength must be greater than zero."
+        )
+
+    row = {
+        column: 0.0
+        for column in columns
+    }
+
+    row.update(
+        {
+            "home_goals_scored": 0.0,
+            "home_goals_conceded": 0.0,
+            "home_weight": 0.0,
+            "away_goals_scored": 0.0,
+            "away_goals_conceded": 0.0,
+            "away_weight": 0.0,
+            "smoothed_home_scored": (
+                league_home_goals
+                * attack_strength
+            ),
+            "smoothed_home_conceded": (
+                league_away_goals
+                * defense_strength
+            ),
+            "smoothed_away_scored": (
+                league_away_goals
+                * attack_strength
+            ),
+            "smoothed_away_conceded": (
+                league_home_goals
+                * defense_strength
+            ),
+            "home_attack": attack_strength,
+            "home_defense": defense_strength,
+            "away_attack": attack_strength,
+            "away_defense": defense_strength,
+        }
+    )
+
+    return row
+
+
+def prepare_current_season_model(
+    strength_model: dict,
+    current_teams: tuple[str, ...],
+    missing_team_priors: dict[str, dict],
+) -> dict:
+    """
+    Add documented priors for missing promoted teams and
+    restrict the model to the current season's clubs.
+    """
+
+    prepared_model = {
+        **strength_model,
+        "teams": strength_model["teams"].copy(),
+    }
+
+    teams = prepared_model["teams"]
+
+    for team in current_teams:
+        if team in teams.index:
+            continue
+
+        prior = missing_team_priors.get(team)
+
+        if prior is None:
+            raise ValueError(
+                "No historical strength or documented prior "
+                f"was found for current EPL team: {team}"
+            )
+
+        teams.loc[team] = _create_prior_team_row(
+            columns=teams.columns.tolist(),
+            league_home_goals=prepared_model[
+                "league_home_goals"
+            ],
+            league_away_goals=prepared_model[
+                "league_away_goals"
+            ],
+            attack_strength=float(
+                prior["attack"]
+            ),
+            defense_strength=float(
+                prior["defense"]
+            ),
+        )
+
+    missing_teams = [
+        team
+        for team in current_teams
+        if team not in teams.index
+    ]
+
+    if missing_teams:
+        raise ValueError(
+            "Current-season teams are missing from the model: "
+            + ", ".join(missing_teams)
+        )
+
+    prepared_model["teams"] = teams.loc[
+        list(current_teams)
+    ].copy()
+
+    prepared_model["current_teams"] = list(
+        current_teams
+    )
+
+    prepared_model["prior_based_teams"] = [
+        team
+        for team in current_teams
+        if team in missing_team_priors
+    ]
+
+    return prepared_model

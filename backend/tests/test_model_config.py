@@ -8,7 +8,7 @@ from backend.app.model.config import (
 
 
 def test_model_has_version():
-    assert MODEL_VERSION == "1.0.0"
+    assert MODEL_VERSION == "1.1.0"
 
 
 def test_approved_team_strength_settings():
