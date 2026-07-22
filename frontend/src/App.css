@@ -2096,3 +2096,15 @@ body {
     padding: 18px 8px;
   }
 }
+.project-credit {
+  position: relative;
+  z-index: 1;
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.project-credit strong {
+  color: #67e8f9;
+  font-weight: 750;
+}

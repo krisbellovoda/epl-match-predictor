@@ -124,6 +124,9 @@ function App() {
   <span className="unofficial-label">
     Unofficial educational project
   </span>
+  <p className="project-credit">
+  A project by <strong>Kristi Bellovoda</strong>
+</p>
 </header>
 
       <section className="prediction-panel">
