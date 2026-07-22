@@ -276,7 +276,12 @@ function App() {
         </section>
       )}
 
-      <ModelPerformance />
+            <ModelPerformance />
+
+      <footer className="site-footer">
+        <span>A project by</span>
+        <strong>Kristi Bellovoda</strong>
+      </footer>
     </main>
   );
 }
